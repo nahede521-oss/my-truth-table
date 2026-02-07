@@ -1,0 +1,229 @@
+<!-- Header / Navigation -->
+<header>
+    <div class="logo">
+        <div class="logo-icon">IU</div>
+        <div class="logo-text">
+            <h2>INNOVATION</h2>
+            <h3>UNIVERSITY</h3>
+        </div>
+    </div>
+
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="header-buttons">
+        <button class="lang-btn" onclick="switchLang()">EN</button>
+        <button class="signin-btn" onclick="openModal()">Sign In</button>
+    </div>
+</header>
+
+<!-- Sign-In Modal -->
+<div class="modal-bg" id="modal">
+    <div class="modal-box">
+        <h2>Sign In</h2>
+        <input type="text" placeholder="Email">
+        <input type="password" placeholder="Password">
+        <button onclick="closeModal()">Login</button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <h1 id="title">حل جداول الصحة</h1>
+    <p class="subtitle" id="subtitle">Truth Table Solver</p>
+
+    <label id="label-input">أدخل التعبير المنطقي:</label>
+    <input type="text" id="expression" placeholder="(A & B) | C">
+
+    <button class="main-btn" onclick="generateTruthTable()" id="main-btn">إنشاء جدول الصحة</button>
+
+    <div id="result"></div>
+</div>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Cairo', sans-serif;
+    background: linear-gradient(135deg, #3d4c7a 0%, #4a5f9e 100%);
+    min-height: 100vh;
+}
+
+/* Header / Navbar */
+header {
+    width: 100%;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 50px; height: 50px; background: #45b7e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3em; font-weight: bold; color: white; border: 3px solid white; }
+.logo-text h2 { color: white; font-size: 1.4em; margin-bottom: -5px; }
+.logo-text h3 { color: #45b7e8; font-size: 1.7em; font-weight: 700; }
+nav ul { display: flex; list-style: none; gap: 25px; }
+nav a { color: white; font-weight: 600; text-decoration: none; font-size: 1em; transition: 0.3s; }
+nav a:hover { color: #45b7e8; }
+.header-buttons { display: flex; gap: 15px; align-items: center; }
+.lang-btn, .signin-btn { padding: 8px 18px; border-radius: 25px; font-weight: 600; cursor: pointer; border: none; transition: 0.3s; }
+.lang-btn { background: white; color: #3d4c7a; }
+.lang-btn:hover { background: #e0e0e0; }
+.signin-btn { background: #45b7e8; color: white; }
+.signin-btn:hover { background: #2fa1d3; }
+
+/* Container */
+.container {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 40px;
+    max-width: 900px;
+    width: 100%;
+    margin: 140px auto;
+}
+h1 { text-align: center; color: #3d4c7a; font-size: 2.5em; margin-bottom: 10px; }
+.subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+input[type="text"] { width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1.1em; background: white; }
+input[type="text"]:focus { border-color: #45b7e8; box-shadow: 0 0 0 3px rgba(69, 183, 232, 0.15); outline: none; }
+button.main-btn { width: 100%; padding: 15px; border: none; background: linear-gradient(135deg, #3d4c7a 0%, #4a5f9e 100%); color: white; font-size: 1.2em; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+button.main-btn:hover { transform: translateY(-2px); }
+
+/* Modal */
+.modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100; }
+.modal-box { background: white; padding: 30px 40px; border-radius: 20px; width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center; }
+.modal-box h2 { color: #3d4c7a; margin-bottom: 20px; }
+.modal-box input { width: 100%; margin: 10px 0; padding: 12px; border-radius: 10px; border: 2px solid #ddd; }
+.modal-box button { width: 100%; padding: 12px; border-radius: 10px; background: #45b7e8; color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 15px; }
+// --- LOGIC SOLVER FUNCTIONS ---
+// This function evaluates a logical expression (e.g., A & B) for given values of A, B, and C.
+function evaluateExpression(expression, A, B, C) {
+    // 1. Replace variables (A, B, C) with their truth values (0 or 1)
+    let evaluatedExp = expression.replace(/A/g, A).replace(/B/g, B).replace(/C/g, C);
+
+    // 2. Substitute operators for JavaScript evaluation
+    // NOT (~)
+    evaluatedExp = evaluatedExp.replace(/~([01])/g, (match, p1) => 1 - parseInt(p1)); 
+    // AND (&)
+    evaluatedExp = evaluatedExp.replace(/([01])\s*&\s*([01])/g, (match, p1, p2) => parseInt(p1) * parseInt(p2)); 
+    // OR (|)
+    evaluatedExp = evaluatedExp.replace(/([01])\s*\|\s*([01])/g, (match, p1, p2) => Math.min(1, parseInt(p1) + parseInt(p2))); 
+
+    try {
+        return eval(evaluatedExp);
+    } catch (e) {
+        return 'Error';
+    }
+}
+
+// This function generates the HTML for the truth table.
+function generateTruthTable() {
+    // Get the expression from the input field (ID: expression)
+    const expression = document.getElementById('expression').value.trim().toUpperCase();
+    const resultContainer = document.getElementById('result');
+    resultContainer.innerHTML = ''; // Clear previous results
+
+    // Identify variables (A, B, C) used in the expression
+    const variables = ['A', 'B', 'C'].filter(v => expression.includes(v));
+    const numVars = variables.length;
+    
+    // Error message based on current language
+    const errorMsg = currentLang === 'ar' 
+        ? '<p style="text-align:center;color:red;font-weight:bold;">أدخل تعبيرًا صالحًا باستخدام A، B، أو C.</p>' 
+        : '<p style="text-align:center;color:red;font-weight:bold;">Please enter a valid expression using A, B, or C.</p>';
+
+    if (numVars === 0 || numVars > 3) {
+        resultContainer.innerHTML = errorMsg;
+        return;
+    }
+
+    const numRows = Math.pow(2, numVars);
+    
+    // Start building the table HTML (inline styles are used because the table itself wasn't styled in the provided CSS)
+    let tableHTML = '<table style="width:100%; border-collapse: collapse; margin-top:20px;">';
+    
+    // Header Row
+    tableHTML += '<thead><tr style="border-bottom: 2px solid #ddd;">';
+    variables.forEach(v => {
+        tableHTML += `<th style="padding: 10px; background-color: #f2f2f2; color: #3d4c7a;">${v}</th>`;
+    });
+    tableHTML += `<th style="padding: 10px; background-color: #f2f2f2; color: #3d4c7a;">${expression}</th>`; 
+    tableHTML += '</tr></thead><tbody>';
+
+    // Calculate Rows
+    for (let i = 0; i < numRows; i++) {
+        tableHTML += '<tr style="border-bottom: 1px solid #eee;">';
+        
+        const values = {};
+        for (let j = 0; j < numVars; j++) {
+            const variable = variables[j];
+            // Determine the 0/1 value for each variable in this row
+            values[variable] = (i >> (numVars - 1 - j)) & 1;
+            tableHTML += `<td style="padding: 10px; text-align: center;">${values[variable]}</td>`;
+        }
+
+        // Evaluate the full expression
+        const result = evaluateExpression(expression, values['A'], values['B'], values['C']);
+        
+        tableHTML += `<td style="padding: 10px; text-align: center; font-weight: bold;">${result}</td>`;
+        tableHTML += '</tr>';
+    }
+
+    tableHTML += '</tbody></table>';
+    resultContainer.innerHTML = tableHTML;
+}
+
+
+// --- LANGUAGE SWITCHING ---
+let currentLang = 'ar';
+const translations = {
+    ar: {
+        title: "حل جداول الصحة",
+        subtitle: "Truth Table Solver",
+        input: "أدخل التعبير المنطقي:",
+        button: "إنشاء جدول الصحة",
+        langBtn: "EN"
+    },
+    en: {
+        title: "Truth Table Generator",
+        subtitle: "Logic Expression Solver",
+        input: "Enter logical expression:",
+        button: "Generate Truth Table",
+        langBtn: "AR"
+    }
+};
+function switchLang() {
+    currentLang = currentLang === 'ar' ? 'en' : 'ar';
+    
+    // Set direction based on language
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    
+    // Apply translations
+    document.getElementById('title').textContent = translations[currentLang].title;
+    document.getElementById('subtitle').textContent = translations[currentLang].subtitle;
+    document.getElementById('label-input').textContent = translations[currentLang].input;
+    document.getElementById('main-btn').textContent = translations[currentLang].button;
+    document.querySelector('.lang-btn').textContent = translations[currentLang].langBtn;
+    
+    // CHECK: Rerun generator to update error message if it was displayed (looks for the red color)
+    const resultDiv = document.getElementById('result');
+    if (resultDiv && resultDiv.innerHTML.includes('red')) {
+        generateTruthTable();
+    }
+}
+
+// --- MODAL FUNCTIONS ---
+function openModal() { document.getElementById('modal').style.display = 'flex'; }
+function closeModal() { 
+    document.getElementById('modal').style.display = 'none'; 
+    // Optional: You could add logic here to submit login data
+}
